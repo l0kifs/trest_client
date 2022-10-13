@@ -3,7 +3,7 @@ import logging
 
 from requests import Response
 
-from trest.utils import is_json
+from src.trest.utils import is_json
 
 
 class RESTResponse(object):

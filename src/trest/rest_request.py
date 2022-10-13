@@ -3,7 +3,7 @@ import logging
 
 import allure
 import requests
-from trest.utils import is_json
+from src.trest.utils import is_json
 
 
 class RESTRequest(object):
@@ -65,7 +65,7 @@ class RESTRequest(object):
                                             hooks=self.hooks,
                                             timeout=self.timeout)
 
-                from trest.rest_response import RESTResponse
+                from src.trest.rest_response import RESTResponse
                 rest_response = RESTResponse(response)
 
                 allure.attach(rest_response.get_string_repr(), 'Response', allure.attachment_type.TEXT)
