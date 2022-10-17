@@ -7,7 +7,7 @@ import allure
 import requests
 from jto import JTOConverter
 
-from src.trest.utils import is_json_string
+from trest.utils import is_json_string
 
 T = TypeVar('T')
 
