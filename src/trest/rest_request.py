@@ -1,18 +1,23 @@
 import json
 import logging
+from dataclasses import is_dataclass
+from typing import TypeVar, Generic
 
 import allure
 import requests
-from src.trest.utils import is_json
+from jto import JTOConverter
+
+from src.trest.utils import is_json_string
+
+T = TypeVar('T')
 
 
-class RESTRequest(object):
+class RESTRequest(Generic[T]):
     def __init__(self, method: str,
                  url: str,
                  params: dict = None,
                  headers: dict = None,
-                 body=None,
-                 json=None,
+                 body: T = None,
                  hooks: dict = None,
                  timeout: float = None):
         self._log = logging.getLogger(self.__class__.__name__)
@@ -20,14 +25,32 @@ class RESTRequest(object):
         self.url = url
         self.params = params
         self.headers = headers
-        self.body = body
-        self.json = json
+        self.body: T = body
         self.hooks = hooks
         self.timeout = timeout
 
     def get_json(self, indent: int = None) -> str:
         self._log.info('Get json representation of the request')
         return json.dumps(self, default=vars, indent=indent)
+
+    def _convert_body_to_string(self, indent: int = None) -> str:
+        self._log.info('Convert request body to string')
+        if type(self.body) == dict:
+            body_string = json.dumps(self.body, indent=indent)
+        elif is_dataclass(self.body):
+            body_string = JTOConverter.to_json(self.body)
+            print(body_string, '- test')
+            body_string = json.dumps(body_string, indent=indent)
+            print(body_string, '- test2')
+        elif type(self.body) == str:
+            if is_json_string(self.body):
+                body_string = json.dumps(json.loads(self.body), indent=indent)
+            else:
+                body_string = self.body
+        else:
+            raise ValueError(f'Unexpected body type "{str(type(self.body))}" was passed '
+                             f'and cannot be converted to string')
+        return body_string
 
     def get_curl_string(self):
         self._log.info('Get curl string representation of the request')
@@ -44,8 +67,7 @@ class RESTRequest(object):
             result_string = result_string + ' \\\n'.join(headers)
 
         if self.body:
-            body_string = self.body if not is_json(self.body) else json.dumps(
-                json.loads(self.body), indent=4)
+            body_string = self._convert_body_to_string(indent=4)
             result_string = f"{result_string} \\\n--data-raw '{body_string}'"
 
         return result_string
@@ -60,8 +82,7 @@ class RESTRequest(object):
                                             self.url,
                                             params=self.params,
                                             headers=self.headers,
-                                            data=self.body,
-                                            json=self.json,
+                                            data=self._convert_body_to_string() if self.body else None,
                                             hooks=self.hooks,
                                             timeout=self.timeout)
 

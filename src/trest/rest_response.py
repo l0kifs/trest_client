@@ -3,7 +3,7 @@ import logging
 
 from requests import Response
 
-from src.trest.utils import is_json
+from src.trest.utils import is_json_string
 
 
 class RESTResponse(object):
@@ -23,7 +23,7 @@ class RESTResponse(object):
 
     def get_response_body_json(self):
         self._log.info(f'Get response body json')
-        if not is_json(self.response_body):
+        if not is_json_string(self.response_body):
             raise TypeError(f'Response body {self.response_body} is not json')
         return json.loads(self.response_body)
 
@@ -34,7 +34,7 @@ class RESTResponse(object):
             'reason': self.reason,
             'headers': self.response_headers,
             'elapsed_time': self.elapsed_time,
-            'body': self.response_body if not is_json(self.response_body) else json.loads(
+            'body': self.response_body if not is_json_string(self.response_body) else json.loads(
                 self.response_body)
         }
         json_request = {
@@ -42,7 +42,7 @@ class RESTResponse(object):
             'method': self.method,
             'path': self.path,
             'headers': self.request_headers,
-            'body': self.request_body if not is_json(self.request_body) else json.loads(
+            'body': self.request_body if not is_json_string(self.request_body) else json.loads(
                 self.request_body),
             'response': json_response
         }
@@ -61,7 +61,7 @@ class RESTResponse(object):
 
         if self.response_body:
             result_string = result_string + '\n\nContent:\n'
-            body_string = self.response_body if not is_json(self.response_body) else json.dumps(
+            body_string = self.response_body if not is_json_string(self.response_body) else json.dumps(
                 json.loads(self.response_body), indent=4)
             result_string = result_string + body_string
 
