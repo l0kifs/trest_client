@@ -6,6 +6,7 @@ from typing import TypeVar, Generic
 import allure
 import requests
 from jto import JTOConverter
+from trest.rest_response import RESTResponse
 
 from trest.utils import is_json_string
 
@@ -72,7 +73,7 @@ class RESTRequest(Generic[T]):
 
         return result_string
 
-    def send(self):
+    def send(self) -> 'RESTResponse':
         self._log.info(f'Send request {self.method} {self.url}')
         with allure.step(f'{self.method} {self.url}'):
             allure.attach(self.get_curl_string(), 'Request curl', allure.attachment_type.TEXT)
