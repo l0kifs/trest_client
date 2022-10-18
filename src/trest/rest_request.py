@@ -87,7 +87,6 @@ class RESTRequest(Generic[T]):
                                             hooks=self.hooks,
                                             timeout=self.timeout)
 
-                from src.trest.rest_response import RESTResponse
                 rest_response = RESTResponse(response)
 
                 allure.attach(rest_response.get_string_repr(), 'Response', allure.attachment_type.TEXT)
