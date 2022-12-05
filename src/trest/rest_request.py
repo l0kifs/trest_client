@@ -74,8 +74,12 @@ class RESTRequest(Generic[T]):
     def send(self) -> 'RESTResponse':
         self._log.info(f'Send request {self.method} {self.url}')
         with allure.step(f'{self.method} {self.url}'):
-            allure.attach(self.get_curl_string(), 'Request curl', allure.attachment_type.TEXT)
-            self._log.debug(f'Request curl:\n{self.get_curl_string()}')
+            curl_request = self.get_curl_string()
+            try:
+                allure.attach(curl_request, 'Request curl', allure.attachment_type.TEXT)
+            except Exception as e:
+                self._log.warning('Failed to attach request to allure report')
+            self._log.debug(f'Request curl:\n{curl_request}')
             try:
                 response = requests.request(self.method,
                                             self.url,
@@ -86,9 +90,12 @@ class RESTRequest(Generic[T]):
                                             timeout=self.timeout)
 
                 rest_response = RESTResponse(response)
-
-                allure.attach(rest_response.get_string_repr(), 'Response', allure.attachment_type.TEXT)
-                self._log.debug(f'Response string:\n{rest_response.get_string_repr()}')
+                response_repr = rest_response.get_string_repr()
+                try:
+                    allure.attach(response_repr, 'Response', allure.attachment_type.TEXT)
+                except Exception as e:
+                    self._log.warning('Failed to attach request to allure report')
+                self._log.debug(f'Response string:\n{response_repr}')
 
                 return rest_response
             except Exception as e:
