@@ -40,9 +40,7 @@ class RESTRequest(Generic[T]):
             body_string = json.dumps(self.body, indent=indent)
         elif is_dataclass(self.body):
             body_string = JTOConverter.to_json(self.body)
-            print(body_string, '- test')
             body_string = json.dumps(body_string, indent=indent)
-            print(body_string, '- test2')
         elif type(self.body) == str:
             if is_json_string(self.body):
                 body_string = json.dumps(json.loads(self.body), indent=indent)
