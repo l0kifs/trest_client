@@ -94,7 +94,7 @@ class RESTRequest(Generic[T]):
                 try:
                     allure.attach(response_repr, 'Response', allure.attachment_type.TEXT)
                 except Exception as e:
-                    self._log.warning('Failed to attach request to allure report')
+                    self._log.warning('Failed to attach response to allure report')
                 self._log.debug(f'Response string:\n{response_repr}')
 
                 return rest_response
