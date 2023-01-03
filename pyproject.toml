@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "trest"
-version = "1.1.6"
+version = "1.2.0"
 description = "Basic REST client with extended logging"
 readme = "README.md"
 authors = [{ name = "l0kifs", email = "l0kifs91@gmail.com" }]
