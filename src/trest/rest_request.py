@@ -1,3 +1,4 @@
+import inspect
 import json
 import logging
 from dataclasses import is_dataclass
@@ -7,6 +8,7 @@ import allure
 import requests
 from jto import JTOConverter
 from requests import Response
+from trest.curl_converter import CurlConverter
 
 from trest.rest_response import RESTResponse
 from trest.utils import is_json_string
@@ -16,6 +18,8 @@ T = TypeVar('T')
 
 
 class RESTRequest(Generic[T]):
+    _log = logging.getLogger(__name__)
+
     def __init__(self, method: str,
                  url: str,
                  params: Dict[str, str] = None,
@@ -23,7 +27,8 @@ class RESTRequest(Generic[T]):
                  body: T = None,
                  hooks: dict = None,
                  timeout: float = None):
-        self._log = logging.getLogger(self.__class__.__name__)
+        self._log.debug(f'function "{inspect.currentframe().f_code.co_name}" '
+                        f'called with args "{inspect.getargvalues(inspect.currentframe()).locals}"')
         self.method = method
         self.url = url
         self.params = params
@@ -33,11 +38,13 @@ class RESTRequest(Generic[T]):
         self.timeout = timeout
 
     def get_json(self, indent: int = None) -> str:
-        self._log.info('Get json representation of the request')
+        self._log.debug(f'function "{inspect.currentframe().f_code.co_name}" '
+                        f'called with args "{inspect.getargvalues(inspect.currentframe()).locals}"')
         return json.dumps(self, default=vars, indent=indent)
 
     def _convert_body_to_string(self, indent: int = None) -> str:
-        self._log.info('Convert request body to string')
+        self._log.debug(f'function "{inspect.currentframe().f_code.co_name}" '
+                        f'called with args "{inspect.getargvalues(inspect.currentframe()).locals}"')
         if type(self.body) == dict:
             body_string = json.dumps(self.body, indent=indent)
         elif is_dataclass(self.body):
@@ -53,37 +60,16 @@ class RESTRequest(Generic[T]):
                              f'and cannot be converted to string')
         return body_string
 
-    def get_curl_string(self, one_line: bool = False) -> str:
-        self._log.info('Get curl string representation of the request')
-        result_string = f'curl --location --request {self.method} {self.url}'
-
-        if self.params:
-            result_string = result_string + '?' + '&'.join([f'{key}={val}' for key, val in self.params.items()])
-
-        if self.headers:
-            result_string = result_string + ' '
-            if not one_line:
-                result_string = result_string + '\\\n'
-            headers = []
-            for key, value in self.headers.items():
-                headers.append(f"--header '{key}: {value}'")
-            if one_line:
-                result_string = result_string + ' '.join(headers)
-            else:
-                result_string = result_string + ' \\\n'.join(headers)
-
-        if self.body:
-            if one_line:
-                body_string = self._convert_body_to_string(indent=None)
-                result_string = f"{result_string} --data-raw '{body_string}'"
-            else:
-                body_string = self._convert_body_to_string(indent=4)
-                result_string = f"{result_string} \\\n--data-raw '{body_string}'"
-
+    def get_curl_string(self) -> str:
+        self._log.debug(f'function "{inspect.currentframe().f_code.co_name}" '
+                        f'called with args "{inspect.getargvalues(inspect.currentframe()).locals}"')
+        result_string = CurlConverter.to_curl(self.method, self.url, self.headers,
+                                    self._convert_body_to_string(indent=None) if self.body is not None else None)
         return result_string
 
     def _create_response(self, response: Response) -> 'RESTResponse':
-        self._log.info('Create RESTResponse object')
+        self._log.debug(f'function "{inspect.currentframe().f_code.co_name}" '
+                        f'called with args "{inspect.getargvalues(inspect.currentframe()).locals}"')
         return RESTResponse(url=response.request.url,
                             method=response.request.method,
                             path=response.request.path_url,
@@ -96,9 +82,10 @@ class RESTRequest(Generic[T]):
                             elapsed_time=str(response.elapsed))
 
     def send(self) -> 'RESTResponse':
-        self._log.info(f'Send request {self.method} {self.url}')
+        self._log.debug(f'function "{inspect.currentframe().f_code.co_name}" '
+                        f'called with args "{inspect.getargvalues(inspect.currentframe()).locals}"')
         with allure.step(f'{self.method} {self.url}'):
-            curl_request = self.get_curl_string(one_line=Config.one_line_request)
+            curl_request = self.get_curl_string()
             try:
                 allure.attach(curl_request, 'Request curl', allure.attachment_type.TEXT)
             except Exception as e:
