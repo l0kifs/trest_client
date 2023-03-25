@@ -1,3 +1,4 @@
+import inspect
 import json
 import logging
 from typing import Dict
@@ -6,6 +7,8 @@ from trest.utils import is_json_string
 
 
 class RESTResponse(object):
+    _log = logging.getLogger(__name__)
+
     def __init__(self, url: str,
                  method: str,
                  path: str,
@@ -16,7 +19,9 @@ class RESTResponse(object):
                  response_headers: Dict[str, str],
                  response_body: str,
                  elapsed_time: str):
-        self._log = logging.getLogger(self.__class__.__name__)
+        self._log.debug(f'function "{inspect.currentframe().f_code.co_name}" '
+                        f'called with args "{inspect.getargvalues(inspect.currentframe()).locals}"')
+
         self.url = url
         self.method = method
         self.path = path
@@ -30,13 +35,15 @@ class RESTResponse(object):
         self.elapsed_time = elapsed_time
 
     def get_response_body_json(self):
-        self._log.info(f'Get response body json')
+        self._log.debug(f'function "{inspect.currentframe().f_code.co_name}" '
+                        f'called with args "{inspect.getargvalues(inspect.currentframe()).locals}"')
         if not is_json_string(self.response_body):
             raise TypeError(f'Response body {self.response_body} is not json')
         return json.loads(self.response_body)
 
     def get_request_json_repr(self):
-        self._log.info(f'Get request json representation')
+        self._log.debug(f'function "{inspect.currentframe().f_code.co_name}" '
+                        f'called with args "{inspect.getargvalues(inspect.currentframe()).locals}"')
         json_response = {
             'status_code': self.status_code,
             'reason': self.reason,
@@ -57,7 +64,8 @@ class RESTResponse(object):
         return json_request
 
     def get_string_repr(self, one_line: bool = False) -> str:
-        self._log.info(f'Get response string representation')
+        self._log.debug(f'function "{inspect.currentframe().f_code.co_name}" '
+                        f'called with args "{inspect.getargvalues(inspect.currentframe()).locals}"')
         result_string = f'{self.status_code} {self.reason} {self.elapsed_time}'
 
         if self.response_headers:

@@ -11,8 +11,8 @@ from requests import Response
 from trest.curl_converter import CurlConverter
 
 from trest.rest_response import RESTResponse
-from trest.utils import is_json_string
 from trest.configuration.config import Config
+from trest.utils import is_json_string
 
 T = TypeVar('T')
 
