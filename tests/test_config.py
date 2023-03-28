@@ -3,7 +3,7 @@ from trest.configuration.config import Config
 
 
 def test_print_oneline_request(capsys):
-    Config.one_line_request = True
+    # Config.one_line_request = True
     Config.print_request_to_std_out = True
 
     request = RESTRequest(method='GET', url='https://api.ipify.org')
