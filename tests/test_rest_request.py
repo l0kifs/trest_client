@@ -7,8 +7,9 @@ def test_get_curl_string():
                           headers={'header1': 'one', 'header2': 'four'},
                           body={'body1': 'one', 'body2': 'two'})
 
-    expected = 'curl -X POST -H "header1: one" -H "header2: four" -d \'{"body1": "one", ' \
-               '"body2": "two"}\' https://api.ipify.org'
+    expected = 'curl -X POST -H "header1: one" -H "header2: four" ' \
+               '-d \'{"body1": "one", "body2": "two"}\' ' \
+               'https://api.ipify.org?param1=one&param2=two'
     assert request.get_curl_string() == expected
 
 

@@ -2,7 +2,7 @@ import inspect
 import json
 import logging
 from dataclasses import is_dataclass
-from typing import TypeVar, Generic, Dict
+from typing import TypeVar, Generic, Dict, Union, List
 
 import allure
 import requests
@@ -22,7 +22,7 @@ class RESTRequest(Generic[T]):
 
     def __init__(self, method: str,
                  url: str,
-                 params: Dict[str, str] = None,
+                 params: Dict[str, Union[str, List[str]]] = None,
                  headers: Dict[str, str] = None,
                  body: T = None,
                  hooks: dict = None,
@@ -63,8 +63,12 @@ class RESTRequest(Generic[T]):
     def get_curl_string(self) -> str:
         self._log.debug(f'function "{inspect.currentframe().f_code.co_name}" '
                         f'called with args "{inspect.getargvalues(inspect.currentframe()).locals}"')
-        result_string = CurlConverter.to_curl(self.method, self.url, self.headers,
-                                    self._convert_body_to_string(indent=None) if self.body is not None else None)
+        result_string = CurlConverter.to_curl(method=self.method,
+                                              url=self.url,
+                                              params=self.params,
+                                              headers=self.headers,
+                                              data=self._convert_body_to_string(indent=None)
+                                              if self.body is not None else None)
         return result_string
 
     def _create_response(self, response: Response) -> 'RESTResponse':

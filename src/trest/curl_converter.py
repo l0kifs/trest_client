@@ -1,6 +1,6 @@
 import inspect
 import logging
-from typing import Dict
+from typing import Dict, List, Union
 
 
 class CurlConverter:
@@ -9,12 +9,14 @@ class CurlConverter:
     @classmethod
     def to_curl(cls, method: str,
                 url: str,
+                params: Dict[str, Union[str, List[str]]] = None,
                 headers: Dict[str, str] = None,
                 data: str = None) -> str:
         """
         Generates Curl string representation
         :param method: http method
         :param url: url
+        :param params: dictionary of url parameters
         :param headers: dict of headers
         :param data: data string
         :return: curl string representation
@@ -28,6 +30,14 @@ class CurlConverter:
             curl_cmd += f' {headers}'
         if data is not None:
             curl_cmd += f' -d \'{data}\''
+        if params is not None:
+            params_list = []
+            for key, value in params.items():
+                if type(value) == list:
+                    for item in value:
+                        params_list.append(f'{key}={item}')
+                else:
+                    params_list.append(f'{key}={value}')
+            url = f'{url}?'+'&'.join(params_list)
         curl_cmd += f' {url}'
-
         return curl_cmd
