@@ -85,7 +85,12 @@ class RESTRequest(Generic[T]):
                             response_body=str(response.text),
                             elapsed_time=str(response.elapsed))
 
-    def send(self) -> 'RESTResponse':
+    def send(self, to_allure: bool = True) -> 'RESTResponse':
+        """
+        Sends the request and returns the response.
+        :param to_allure: flag to enable/disable allure reporting for this request
+        :return: response object
+        """
         self._log.debug(f'function "{inspect.currentframe().f_code.co_name}" '
                         f'called with args "{inspect.getargvalues(inspect.currentframe()).locals}"')
         with allure.step(f'{self.method} {self.url}'):
@@ -119,3 +124,31 @@ class RESTRequest(Generic[T]):
                 return rest_response
             except Exception as e:
                 raise e
+
+    def _send_request(self):
+        self._log.debug(f'function "{inspect.currentframe().f_code.co_name}" '
+                        f'called with args "{inspect.getargvalues(inspect.currentframe()).locals}"')
+
+        curl_request = self.get_curl_string()
+        self._log.debug(f'Request curl:\n{curl_request}')
+        if Config.print_request_to_std_out:
+            print(curl_request)
+
+        try:
+            response = requests.request(self.method,
+                                        self.url,
+                                        params=self.params,
+                                        headers=self.headers,
+                                        data=self._convert_body_to_string() if self.body else None,
+                                        hooks=self.hooks,
+                                        timeout=self.timeout)
+            rest_response = self._create_response(response)
+
+            response_repr = rest_response.get_string_repr(one_line=Config.one_line_response)
+            self._log.debug(f'Response string:\n{response_repr}')
+            if Config.print_response_to_std_out:
+                print(response_repr)
+
+            return rest_response
+        except Exception as e:
+            raise e
