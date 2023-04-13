@@ -29,7 +29,6 @@ class RESTRequest(Generic[T]):
                  timeout: float = None):
         self._log.debug(f'function "{inspect.currentframe().f_code.co_name}" '
                         f'called with args "{inspect.getargvalues(inspect.currentframe()).locals}"')
-        self._allure_step = None
 
         self.method = method
         self.url = url
@@ -100,7 +99,6 @@ class RESTRequest(Generic[T]):
             print(curl_request)
 
         if to_allure:
-            self._allure_step = allure.step(f'{self.method} {self.url}')
             try:
                 allure.attach(curl_request, f'{self.method} {self.url} request curl', allure.attachment_type.TEXT)
             except Exception:
@@ -130,8 +128,8 @@ class RESTRequest(Generic[T]):
         """
         self._log.debug(f'function "{inspect.currentframe().f_code.co_name}" '
                         f'called with args "{inspect.getargvalues(inspect.currentframe()).locals}"')
-        self._log_request(to_allure=to_allure)
         try:
+            self._log_request(to_allure=to_allure)
             response = requests.request(self.method,
                                         self.url,
                                         params=self.params,
