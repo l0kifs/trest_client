@@ -6,7 +6,6 @@ from typing import TypeVar, Generic, Dict, Union, List
 
 import allure
 import requests
-from allure_commons._allure import StepContext
 from jto import JTOConverter
 from requests import Response
 from trest.curl_converter import CurlConverter
@@ -59,6 +58,8 @@ class RESTRequest(Generic[T]):
             else:
                 body_string = self.body
         else:
+            self._log.error(f'Unexpected body type "{str(type(self.body))}" was passed '
+                            f'and cannot be converted to string')
             raise ValueError(f'Unexpected body type "{str(type(self.body))}" was passed '
                              f'and cannot be converted to string')
         return body_string
@@ -100,11 +101,10 @@ class RESTRequest(Generic[T]):
 
         if to_allure:
             self._allure_step = allure.step(f'{self.method} {self.url}')
-            with self._allure_step:
-                try:
-                    allure.attach(curl_request, 'Request curl', allure.attachment_type.TEXT)
-                except Exception as e:
-                    self._log.warning('Failed to attach request to allure report', stack_info=True)
+            try:
+                allure.attach(curl_request, f'{self.method} {self.url} request curl', allure.attachment_type.TEXT)
+            except Exception:
+                self._log.warning('Failed to attach request to allure report', stack_info=True)
 
     def _log_response(self, rest_response, to_allure: bool = True) -> None:
         self._log.debug(f'function "{inspect.currentframe().f_code.co_name}" '
@@ -117,11 +117,10 @@ class RESTRequest(Generic[T]):
             print(response_repr)
 
         if to_allure:
-            with self._allure_step:
-                try:
-                    allure.attach(response_repr, 'Response', allure.attachment_type.TEXT)
-                except Exception as e:
-                    self._log.warning('Failed to attach response to allure report', stack_info=True)
+            try:
+                allure.attach(response_repr, f'{self.method} {self.url} response', allure.attachment_type.TEXT)
+            except Exception:
+                self._log.warning('Failed to attach response to allure report', stack_info=True)
 
     def send(self, to_allure: bool = True) -> 'RESTResponse':
         """
@@ -143,5 +142,6 @@ class RESTRequest(Generic[T]):
             rest_response = self._create_response(response)
             self._log_response(rest_response, to_allure=to_allure)
             return rest_response
-        except Exception as e:
-            raise e
+        except Exception:
+            self._log.error(f'Failed to send request "{self.method} {self.url}"', exc_info=True)
+            raise Exception(f'Failed to send request "{self.method} {self.url}"')
