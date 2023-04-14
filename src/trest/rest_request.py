@@ -38,7 +38,14 @@ class RESTRequest(Generic[T]):
         self.hooks = hooks
         self.timeout = timeout
 
+        self.response: Union[RESTResponse, None] = None
+
     def get_json(self, indent: int = None) -> str:
+        """
+        Get json representation of the request.
+        :param indent: integer of indentation
+        :return:
+        """
         self._log.debug(f'function "{inspect.currentframe().f_code.co_name}" '
                         f'called with args "{inspect.getargvalues(inspect.currentframe()).locals}"')
         return json.dumps(self, default=vars, indent=indent)
@@ -64,6 +71,10 @@ class RESTRequest(Generic[T]):
         return body_string
 
     def get_curl_string(self) -> str:
+        """
+        Get curl string representation of the request.
+        :return:
+        """
         self._log.debug(f'function "{inspect.currentframe().f_code.co_name}" '
                         f'called with args "{inspect.getargvalues(inspect.currentframe()).locals}"')
         result_string = CurlConverter.to_curl(method=self.method,
@@ -92,33 +103,24 @@ class RESTRequest(Generic[T]):
         self._log.debug(f'function "{inspect.currentframe().f_code.co_name}" '
                         f'called with args "{inspect.getargvalues(inspect.currentframe()).locals}"')
         curl_request = self.get_curl_string()
+        response_repr = self.response.get_string_repr(one_line=Config.one_line_response) if self.response is not None \
+            else 'Response not available'
 
         self._log.debug(f'Request curl:\n{curl_request}')
+        self._log.debug(f'Response string:\n{response_repr}')
 
         if Config.print_request_to_std_out:
             print(curl_request)
-
-        if to_allure:
-            try:
-                allure.attach(curl_request, f'{self.method} {self.url} request curl', allure.attachment_type.TEXT)
-            except Exception:
-                self._log.warning('Failed to attach request to allure report', stack_info=True)
-
-    def _log_response(self, rest_response, to_allure: bool = True) -> None:
-        self._log.debug(f'function "{inspect.currentframe().f_code.co_name}" '
-                        f'called with args "{inspect.getargvalues(inspect.currentframe()).locals}"')
-        response_repr = rest_response.get_string_repr(one_line=Config.one_line_response)
-
-        self._log.debug(f'Response string:\n{response_repr}')
-
         if Config.print_response_to_std_out:
             print(response_repr)
 
         if to_allure:
-            try:
-                allure.attach(response_repr, f'{self.method} {self.url} response', allure.attachment_type.TEXT)
-            except Exception:
-                self._log.warning('Failed to attach response to allure report', stack_info=True)
+            with allure.step(f'{self.method} {self.url}'):
+                try:
+                    allure.attach(curl_request, f'{self.method} {self.url} request curl', allure.attachment_type.TEXT)
+                    allure.attach(response_repr, f'{self.method} {self.url} response', allure.attachment_type.TEXT)
+                except Exception:
+                    self._log.warning('Failed to attach data to allure report', stack_info=True)
 
     def send(self, to_allure: bool = True) -> 'RESTResponse':
         """
@@ -129,7 +131,6 @@ class RESTRequest(Generic[T]):
         self._log.debug(f'function "{inspect.currentframe().f_code.co_name}" '
                         f'called with args "{inspect.getargvalues(inspect.currentframe()).locals}"')
         try:
-            self._log_request(to_allure=to_allure)
             response = requests.request(self.method,
                                         self.url,
                                         params=self.params,
@@ -138,8 +139,10 @@ class RESTRequest(Generic[T]):
                                         hooks=self.hooks,
                                         timeout=self.timeout)
             rest_response = self._create_response(response)
-            self._log_response(rest_response, to_allure=to_allure)
+            self.response = rest_response
             return rest_response
         except Exception:
             self._log.error(f'Failed to send request "{self.method} {self.url}"', exc_info=True)
             raise Exception(f'Failed to send request "{self.method} {self.url}"')
+        finally:
+            self._log_request(to_allure=to_allure)
