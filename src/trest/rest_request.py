@@ -117,8 +117,8 @@ class RESTRequest(Generic[T]):
         if to_allure:
             with allure.step(f'{self.method} {self.url}'):
                 try:
-                    allure.attach(curl_request, f'{self.method} {self.url} request curl', allure.attachment_type.TEXT)
-                    allure.attach(response_repr, f'{self.method} {self.url} response', allure.attachment_type.TEXT)
+                    allure.attach(curl_request, f'Request curl', allure.attachment_type.TEXT)
+                    allure.attach(response_repr, f'Response', allure.attachment_type.TEXT)
                 except Exception:
                     self._log.warning('Failed to attach data to allure report', stack_info=True)
 

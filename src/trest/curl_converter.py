@@ -11,7 +11,8 @@ class CurlConverter:
                 url: str,
                 params: Dict[str, Union[str, List[str]]] = None,
                 headers: Dict[str, str] = None,
-                data: str = None) -> str:
+                data: str = None,
+                multiline: bool = False) -> str:
         """
         Generates Curl string representation
         :param method: http method
@@ -23,13 +24,22 @@ class CurlConverter:
         """
         cls._log.debug(f'function "{inspect.currentframe().f_code.co_name}" '
                        f'called with args "{inspect.getargvalues(inspect.currentframe()).locals}"')
+        if multiline:
+            curl_cmd = f'curl -X {method} \\\n'
+        else:
+            curl_cmd = f'curl -X {method}'
 
-        curl_cmd = f'curl -X {method}'
         if headers is not None:
-            headers = ' '.join(f'-H "{key}: {value}"' for key, value in headers.items())
-            curl_cmd += f' {headers}'
+            if multiline:
+                headers = ' \\\n'.join(f'-H "{key}: {value}"' for key, value in headers.items())
+                curl_cmd += f'{headers} \\\n'
+            else:
+                headers = ' '.join(f'-H "{key}: {value}"' for key, value in headers.items())
+                curl_cmd += f' {headers}'
+
         if data is not None:
             curl_cmd += f' -d \'{data}\''
+
         if params is not None:
             params_list = []
             for key, value in params.items():
@@ -39,5 +49,8 @@ class CurlConverter:
                 else:
                     params_list.append(f'{key}={value}')
             url = f'{url}?'+'&'.join(params_list)
-        curl_cmd += f' {url}'
+        if multiline:
+            curl_cmd += f'{url}'
+        else:
+            curl_cmd += f' {url}'
         return curl_cmd
