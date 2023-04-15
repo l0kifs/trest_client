@@ -4,22 +4,22 @@ changelog:
   categories:
     - title: '🚀 New Features'
       labels:
-        - 'type:new feature'
+        - 'new-feature'
     - title: '🚧 Improvements'
       labels:
-        - 'type:improvement'
+        - 'improvement'
     - title: '🪲 Bug Fixes'
       labels:
-        - 'type:bug'
+        - 'bug'
     - title: '⬆️ Dependency Updates'
       labels:
         - 'type:dependencies'
     - title: '📖 Documentation improvements'
       labels:
-        - 'type:documentation'
+        - 'documentation'
     - title: '⛔️ Security'
       labels:
-        - 'type:security'
+        - 'security'
     - title: '🔬 Internal changes'
       labels:
-        - 'type:internal'
+        - 'internal'
