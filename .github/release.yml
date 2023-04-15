@@ -1,0 +1,25 @@
+# release.yml
+
+changelog:
+  categories:
+    - title: '🚀 New Features'
+      labels:
+        - 'new-feature'
+    - title: '🚧 Improvements'
+      labels:
+        - 'improvement'
+    - title: '🪲 Bug Fixes'
+      labels:
+        - 'bug'
+    - title: '⬆️ Dependency Updates'
+      labels:
+        - 'type:dependencies'
+    - title: '📖 Documentation improvements'
+      labels:
+        - 'documentation'
+    - title: '⛔️ Security'
+      labels:
+        - 'security'
+    - title: '🔬 Internal changes'
+      labels:
+        - 'internal'
