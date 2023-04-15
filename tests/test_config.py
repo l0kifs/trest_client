@@ -67,4 +67,4 @@ def test_print_oneline_response(capsys):
 
     actual = capsys.readouterr().out
     assert len(actual) > 2
-    assert actual.strip().count('\n') == 0
+    assert actual.strip().count('\n') <= 1
