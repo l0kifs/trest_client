@@ -9,6 +9,7 @@ import requests
 from jto import JTOConverter
 from requests import Response
 from trest.curl_converter import CurlConverter
+from trest.object_converter import ObjectConverter
 
 from trest.rest_response import RESTResponse
 from trest.configuration.config import Config
@@ -53,21 +54,7 @@ class RESTRequest(Generic[T]):
     def _convert_body_to_string(self, indent: int = None) -> str:
         self._log.debug(f'function "{inspect.currentframe().f_code.co_name}" '
                         f'called with args "{inspect.getargvalues(inspect.currentframe()).locals}"')
-        if type(self.body) == dict:
-            body_string = json.dumps(self.body, indent=indent)
-        elif is_dataclass(self.body):
-            body_string = JTOConverter.to_json(self.body)
-            body_string = json.dumps(body_string, indent=indent)
-        elif type(self.body) == str:
-            if is_json_string(self.body):
-                body_string = json.dumps(json.loads(self.body), indent=indent)
-            else:
-                body_string = self.body
-        else:
-            self._log.error(f'Unexpected body type "{str(type(self.body))}" was passed '
-                            f'and cannot be converted to string')
-            raise ValueError(f'Unexpected body type "{str(type(self.body))}" was passed '
-                             f'and cannot be converted to string')
+        body_string = ObjectConverter.to_string(self.body, indent=indent)
         return body_string
 
     def get_curl_string(self) -> str:
@@ -82,7 +69,8 @@ class RESTRequest(Generic[T]):
                                               params=self.params,
                                               headers=self.headers,
                                               data=self._convert_body_to_string(indent=None)
-                                              if self.body is not None else None)
+                                              if self.body is not None else None,
+                                              multiline=False if Config.one_line_request else True)
         return result_string
 
     def _create_response(self, response: Response) -> 'RESTResponse':
